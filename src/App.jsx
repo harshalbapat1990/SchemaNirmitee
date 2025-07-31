@@ -19,6 +19,8 @@ function MainApp() {
   const [dbmlError, setDbmlError] = useState('')
 
   const [diagnostics, setDiagnostics] = useState({ diags: [] });
+  const [diagramNodes, setDiagramNodes] = useState([]);
+  const [diagramEdges, setDiagramEdges] = useState([]);
 
   const handleErrorClick = (diag) => {
     const editor = editorRef.current;
@@ -38,18 +40,26 @@ function MainApp() {
     try {
       if (dbml.trim()) {
         const parser = new Parser();
+        // After parsing DBML
         const parsed = parser.parse(dbml, 'dbmlv2');
-        setDiagnostics({ diags: [] }); // clear previous errors
+        // console.log('Parsed DBML:', parsed);
+        setDiagnostics({ diags: [] });
 
-        // Convert parsed DBML to Mermaid ERD code
-        const mermaidCode = dbmlToMermaid(parsed);
-        console.log('Mermaid ERD:', mermaidCode);
-        setDiagramCode(mermaidCode);
+        const nodes = dbmlToReactFlowNodes(parsed);
+        const edges = dbmlToReactFlowEdges(parsed);
+        setDiagramNodes(nodes);
+        setDiagramEdges(edges);
+
+        console.log('Nodes:', nodes.map(n => n.id));
+        console.log('Edges:', edges.map(e => ({ source: e.source, target: e.target })));
       } else {
-        setDiagramCode('');
+        setDiagramNodes([]);
+        setDiagramEdges([]);
         setDiagnostics({ diags: [] });
       }
     } catch (err) {
+      setDiagramNodes([]);
+      setDiagramEdges([]);
       if (err && err.diags && Array.isArray(err.diags)) {
         setDiagnostics({ diags: err.diags });
       } else {
@@ -68,9 +78,9 @@ function MainApp() {
       }
 
       setDiagramCode('');
+      setDiagramNodes([]);
     }
   }, [dbml, setDiagramCode]);
-
 
 
   return (
@@ -127,7 +137,7 @@ function MainApp() {
             flexDirection: 'column'
           }}>
             <div style={{ flex: 1 }}>
-              <DiagramViewer diagramCode={diagramCode} />
+              <DiagramViewer nodes={diagramNodes} edges={diagramEdges} />
             </div>
           </div>
         }
@@ -150,6 +160,47 @@ function dbmlToMermaid(parsed) {
     mermaid += '  }\n';
   });
   return mermaid;
+}
+
+function dbmlToReactFlowNodes(parsed) {
+  if (!parsed || !parsed.schemas || !parsed.schemas[0] || !parsed.schemas[0].tables) return [];
+  const tables = parsed.schemas[0].tables;
+  // Spread tables horizontally for now
+  return tables.map((table, idx) => ({
+    id: table.name,
+    type: 'default',
+    position: { x: 100 + idx * 300, y: 100 },
+    data: {
+      label: table.name,
+      fields: table.fields.map(f => ({
+        name: f.name,
+        type: f.type?.type_name || f.type || 'unknown'
+      }))
+    }
+  }));
+}
+
+function dbmlToReactFlowEdges(parsed) {
+  if (!parsed || !parsed.schemas || !parsed.schemas[0] || !parsed.schemas[0].refs) return [];
+  const refs = parsed.schemas[0].refs;
+  const edges = [];
+
+  refs.forEach(ref => {
+    if (Array.isArray(ref.endpoints) && ref.endpoints.length === 2) {
+      // referencing = endpoints[0], referenced = endpoints[1]
+      const referencing = ref.endpoints[0];
+      const referenced = ref.endpoints[1];
+
+      edges.push({
+        id: `e-${referencing.tableName}-${referenced.tableName}-${referencing.fieldNames?.[0] || 'ref'}`,
+        source: referencing.tableName,
+        target: referenced.tableName,
+        label: `${referencing.fieldNames?.[0] || 'ref'} → ${referenced.tableName}.${referenced.fieldNames?.[0]}`,
+      });
+    }
+  });
+
+  return edges;
 }
 
 export default function App() {

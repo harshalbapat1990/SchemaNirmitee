@@ -12,9 +12,9 @@
   "dependencies": {
     "@dbml/core": "^3.13.9",
     "@monaco-editor/react": "^4.7.0",
-    "mermaid": "^11.9.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "reactflow": "^11.11.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
