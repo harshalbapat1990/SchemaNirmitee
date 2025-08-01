@@ -9,7 +9,7 @@ import DiagramViewer from './components/DiagramViewer'
 import CompileErrorsViewer from './components/CompileErrorsViewer'
 import { Parser, CompilerDiagnostic, CompilerError } from '@dbml/core'
 import './App.css'
-
+import TableNode from './components/CustomNodes.jsx'
 function MainApp() {
 
   const editorRef = useRef(null);
@@ -21,6 +21,11 @@ function MainApp() {
   const [diagnostics, setDiagnostics] = useState({ diags: [] });
   const [diagramNodes, setDiagramNodes] = useState([]);
   const [diagramEdges, setDiagramEdges] = useState([]);
+  
+
+  const nodeTypes = {
+    tableNode: TableNode,
+  };
 
   const handleErrorClick = (diag) => {
     const editor = editorRef.current;
@@ -42,16 +47,18 @@ function MainApp() {
         const parser = new Parser();
         // After parsing DBML
         const parsed = parser.parse(dbml, 'dbmlv2');
-        // console.log('Parsed DBML:', parsed);
+        console.log('Parsed DBML:', parsed);
         setDiagnostics({ diags: [] });
 
         const nodes = dbmlToReactFlowNodes(parsed);
+        // console.log(nodes);
         const edges = dbmlToReactFlowEdges(parsed);
+        // console.log(edges);
         setDiagramNodes(nodes);
         setDiagramEdges(edges);
 
-        console.log('Nodes:', nodes.map(n => n.id));
-        console.log('Edges:', edges.map(e => ({ source: e.source, target: e.target })));
+        // console.log('Nodes:', nodes.map(n => n.id));
+        // console.log('Edges:', edges.map(e => ({ source: e.source, target: e.target })));
       } else {
         setDiagramNodes([]);
         setDiagramEdges([]);
@@ -79,6 +86,7 @@ function MainApp() {
 
       setDiagramCode('');
       setDiagramNodes([]);
+      setDiagramEdges([]);
     }
   }, [dbml, setDiagramCode]);
 
@@ -118,13 +126,10 @@ function MainApp() {
                 editorRef={editorRef}
               />
             </div>
-            {/* {Array.isArray(diagnostics) && diagnostics.length > 0 && ( */}
-
             <CompileErrorsViewer
               diagnostics={diagnostics}
               onErrorClick={handleErrorClick}
             />
-            {/* )} */}
           </div>
         }
         rightPane={
@@ -137,7 +142,8 @@ function MainApp() {
             flexDirection: 'column'
           }}>
             <div style={{ flex: 1 }}>
-              <DiagramViewer nodes={diagramNodes} edges={diagramEdges} />
+              <DiagramViewer refnodes={diagramNodes} refedges={diagramEdges}/>
+              {/* theme={theme} /> */}
             </div>
           </div>
         }
@@ -146,62 +152,77 @@ function MainApp() {
   )
 }
 
-function dbmlToMermaid(parsed) {
-  if (!parsed || !parsed.schemas || !parsed.schemas[0] || !parsed.schemas[0].tables) return '';
-  const tables = parsed.schemas[0].tables;
-  let mermaid = 'erDiagram\n';
-  tables.forEach(table => {
-    mermaid += `  ${table.name} {\n`;
-    table.fields.forEach(field => {
-      // Use field.type.type_name for type, field.name for name
-      const type = field.type?.type_name || field.type || 'unknown';
-      mermaid += `    ${type} ${field.name}\n`;
-    });
-    mermaid += '  }\n';
-  });
-  return mermaid;
-}
-
 function dbmlToReactFlowNodes(parsed) {
   if (!parsed || !parsed.schemas || !parsed.schemas[0] || !parsed.schemas[0].tables) return [];
   const tables = parsed.schemas[0].tables;
   // Spread tables horizontally for now
-  return tables.map((table, idx) => ({
+  // Create a node for each table (as a group node)
+  const nodes = tables.map((table, idx) => ({
     id: table.name,
-    type: 'default',
+    data: { label: table.name },
     position: { x: 100 + idx * 300, y: 100 },
-    data: {
-      label: table.name,
-      fields: table.fields.map(f => ({
-        name: f.name,
-        type: f.type?.type_name || f.type || 'unknown'
-      }))
-    }
+    style: { width: 200, height: 60 + (table.fields.length * 40) },
+    type: 'tableNode',
   }));
+
+  // Create a node for each field, as a child of its table
+  const fieldNodes = tables.flatMap((table, idx) =>
+    table.fields.map((field, fIdx) => ({
+      id: `${table.name}.${field.name}`,
+      data: {
+        label: `${field.name}: ${field.type?.type_name || field.type || 'unknown'}`,
+        isField: true,
+        fieldName: field.name,
+        fieldType: field.type?.type_name || field.type || 'unknown'
+      },
+      position: { x: 0, y: 40 + fIdx * 40 },
+      parentId: table.name,
+      extent: 'parent',
+      draggable: false,
+      type: 'tableNode',
+    }))
+  );
+  // Merge table nodes and field nodes into a single array and return
+  return nodes.concat(fieldNodes);
 }
 
 function dbmlToReactFlowEdges(parsed) {
-  if (!parsed || !parsed.schemas || !parsed.schemas[0] || !parsed.schemas[0].refs) return [];
+  if (!parsed?.schemas?.[0]?.refs) return [];
+
   const refs = parsed.schemas[0].refs;
   const edges = [];
 
   refs.forEach(ref => {
     if (Array.isArray(ref.endpoints) && ref.endpoints.length === 2) {
-      // referencing = endpoints[0], referenced = endpoints[1]
-      const referencing = ref.endpoints[0];
-      const referenced = ref.endpoints[1];
+      const [sourceEndpoint, targetEndpoint] = ref.endpoints;
+
+      const source = sourceEndpoint.fieldNames?.[0]
+        ? `${sourceEndpoint.tableName}.${sourceEndpoint.fieldNames[0]}`
+        : sourceEndpoint.tableName;
+
+      const target = targetEndpoint.fieldNames?.[0]
+        ? `${targetEndpoint.tableName}.${targetEndpoint.fieldNames[0]}`
+        : targetEndpoint.tableName;
+
+      const sourceRelation = sourceEndpoint.relation || '';
+      const targetRelation = targetEndpoint.relation || '';
 
       edges.push({
-        id: `e-${referencing.tableName}-${referenced.tableName}-${referencing.fieldNames?.[0] || 'ref'}`,
-        source: referencing.tableName,
-        target: referenced.tableName,
-        label: `${referencing.fieldNames?.[0] || 'ref'} → ${referenced.tableName}.${referenced.fieldNames?.[0]}`,
+        id: `e-${source}-${target}`,
+        source,
+        target,
+        sourceHandle: 'source',
+        targetHandle: 'target',
+        label: `${sourceRelation} → ${targetRelation}`,
+        type: 'smoothstep'
       });
     }
   });
 
   return edges;
 }
+
+
 
 export default function App() {
   return (

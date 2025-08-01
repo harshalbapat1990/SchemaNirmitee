@@ -1,34 +1,60 @@
-import React from 'react';
-import ReactFlow, {
-  Background,
-  Controls,
-  MiniMap
-} from 'reactflow';
+import React, { useState, useCallback, useEffect } from 'react';
+import ReactFlow, { applyNodeChanges, applyEdgeChanges, addEdge } from 'reactflow';
 import 'reactflow/dist/style.css';
+import TableNode from './CustomNodes.jsx';
 
-// Define outside the component
+// Hardcoded nodes and edges for a simple diagram
+const initialNodes = [
+  { id: '1', position: { x: 100, y: 100 }, data: { label: 'Node A' } },
+  { id: '2', position: { x: 300, y: 100 }, data: { label: 'Node B' } },
+  { id: '3', position: { x: 200, y: 250 }, data: { label: 'Node C' } }
+];
+
+const initialEdges = [
+  { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
+  { id: 'e2-3', source: '2', target: '3', type: 'smoothstep' }
+];
+
 const nodeTypes = {
-  // Custom node types here
+  tableNode: TableNode,
 };
 
-const edgeTypes = {
-  // Custom edge types here
-};
+export default function DiagramViewer(refnodes) {
+  const [nodes, setNodes] = useState(refnodes?.refnodes || initialNodes);
+  const [edges, setEdges] = useState(refnodes?.refedges || initialEdges);
+  // Update nodes if refnodes.refnodes changes
+  useEffect(() => {
+    setNodes(refnodes?.refnodes || initialNodes);
+  }, [refnodes?.refnodes]);
+  // Update edges if refnodes.refedges changes
+  useEffect(() => {
+    setEdges(refnodes?.refedges || initialEdges);
+  }, [refnodes?.refedges]);
 
-export default function DiagramViewer({ nodes, edges }) {
+  const onNodesChange = useCallback(
+    (changes) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
+    [],
+  );
+  const onEdgesChange = useCallback(
+    (changes) => setEdges((edgesSnapshot) => applyEdgeChanges(changes, edgesSnapshot)),
+    [],
+  );
+  const onConnect = useCallback(
+    (params) => setEdges((edgesSnapshot) => addEdge({ ...params, type: 'smoothstep' }, edgesSnapshot)),
+    [],
+  );
+
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div style={{ width: '100vw', height: '100vh' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
         fitView
-      >
-        <Background />
-        <Controls />
-        <MiniMap />
-      </ReactFlow>
+      />
     </div>
   );
 }
