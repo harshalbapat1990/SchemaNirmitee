@@ -19,17 +19,41 @@ const nodeTypes = {
   tableNode: TableNode,
 };
 
-export default function DiagramViewer(refnodes) {
-  const [nodes, setNodes] = useState(refnodes?.refnodes || initialNodes);
-  const [edges, setEdges] = useState(refnodes?.refedges || initialEdges);
-  // Update nodes if refnodes.refnodes changes
+export default function DiagramViewer({ refnodes = [], refedges = [], onTableClick, onTableDoubleClick, selectedTable }) {
+  // Add handlers and nodeId to each node's data
+  const [nodes, setNodes] = useState(
+    (refnodes || []).map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        onTableClick,
+        onTableDoubleClick,
+        nodeId: node.id,
+        selected: selectedTable === node.id,
+      }
+    }))
+  );
+
   useEffect(() => {
-    setNodes(refnodes?.refnodes || initialNodes);
-  }, [refnodes?.refnodes]);
-  // Update edges if refnodes.refedges changes
+    setNodes(
+      (refnodes || []).map(node => ({
+        ...node,
+        data: {
+          ...node.data,
+          onTableClick,
+          onTableDoubleClick,
+          nodeId: node.id,
+          selected: selectedTable === node.id,
+        }
+      }))
+    );
+  }, [refnodes, onTableClick, onTableDoubleClick, selectedTable]);
+
+  const [edges, setEdges] = useState(refedges || []);
+
   useEffect(() => {
-    setEdges(refnodes?.refedges || initialEdges);
-  }, [refnodes?.refedges]);
+    setEdges(refedges || []);
+  }, [refedges]);
 
   const onNodesChange = useCallback(
     (changes) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useRef } from 'react'
+import React, { useContext, useEffect, useState, useRef, useCallback } from 'react'
 import { EditorProvider, EditorContext } from './state/editorContext.jsx'
 import { DiagramProvider, DiagramContext } from './state/diagramContext.jsx'
 import { AppProvider, AppContext } from './state/appContext.jsx'
@@ -21,7 +21,7 @@ function MainApp() {
   const [diagnostics, setDiagnostics] = useState({ diags: [] });
   const [diagramNodes, setDiagramNodes] = useState([]);
   const [diagramEdges, setDiagramEdges] = useState([]);
-  
+  const [selectedTable, setSelectedTable] = useState(null);
 
   const nodeTypes = {
     tableNode: TableNode,
@@ -41,13 +41,60 @@ function MainApp() {
       editor.focus();
     }
   };
+
+  // Single click: select/highlight in diagram
+  const handleTableClick = useCallback((nodeId) => {
+    setSelectedTable(nodeId);
+  }, []);
+
+  // Double click: highlight code in editor
+  const handleTableDoubleClick = useCallback((nodeId) => {
+    if (!dbml) return;
+    const lines = dbml.split('\n');
+    const tableStart = lines.findIndex(line => line.trim().toLowerCase().startsWith(`table ${nodeId.toLowerCase()}`));
+    if (tableStart === -1 || !editorRef.current) return;
+
+    // Find the opening '{' after the table line
+    let openBraceLine = tableStart;
+    while (openBraceLine < lines.length && !lines[openBraceLine].includes('{')) {
+      openBraceLine++;
+    }
+    if (openBraceLine >= lines.length) return;
+
+    // Find the matching closing '}'
+    let braceCount = 0;
+    let tableEnd = openBraceLine;
+    for (let i = openBraceLine; i < lines.length; i++) {
+      if (lines[i].includes('{')) braceCount++;
+      if (lines[i].includes('}')) braceCount--;
+      if (braceCount === 0) {
+        tableEnd = i;
+        break;
+      }
+    }
+
+    // Select from tableStart+1 to tableEnd+1 (VS Code editor is 1-based)
+    editorRef.current.setSelection({
+      startLineNumber: tableStart + 1,
+      startColumn: 1,
+      endLineNumber: tableEnd + 1,
+      endColumn: lines[tableEnd].length + 1,
+    });
+    editorRef.current.revealPositionInCenter({
+      lineNumber: tableStart + 1,
+      column: 1,
+    });
+    editorRef.current.focus();
+  }, [dbml]);
+
   useEffect(() => {
     try {
       if (dbml.trim()) {
         const parser = new Parser();
         // After parsing DBML
-        const parsed = parser.parse(dbml, 'dbmlv2');
+        const parsed = parser.parse(dbml, 'dbmlv2', { locations: true });
         console.log('Parsed DBML:', parsed);
+        console.log(parsed.schemas[0].tables[0]);
         setDiagnostics({ diags: [] });
 
         const nodes = dbmlToReactFlowNodes(parsed);
@@ -142,8 +189,13 @@ function MainApp() {
             flexDirection: 'column'
           }}>
             <div style={{ flex: 1 }}>
-              <DiagramViewer refnodes={diagramNodes} refedges={diagramEdges}/>
-              {/* theme={theme} /> */}
+              <DiagramViewer
+                refnodes={diagramNodes}
+                refedges={diagramEdges}
+                onTableClick={handleTableClick}
+                onTableDoubleClick={handleTableDoubleClick}
+                selectedTable={selectedTable}
+              />
             </div>
           </div>
         }

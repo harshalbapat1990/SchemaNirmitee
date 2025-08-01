@@ -2,7 +2,10 @@ import React, { useCallback, useMemo } from 'react';
 import { Handle } from 'reactflow';
 
 export function TableNode(props) {
-  const { label, fields = [], theme = 'light', selected, isField, fieldName, fieldType } = props.data;
+  const {
+    label, fields = [], theme = 'light', selected, isField, fieldName, fieldType,
+    onTableClick, onTableDoubleClick, nodeId
+  } = props.data;
   const isDark = theme === 'dark';
   const tableNameBg = isDark ? '#222222' : '#3C6795';
   const tableNameFont = '#FFFFFF';
@@ -45,6 +48,7 @@ export function TableNode(props) {
           position: 'relative', // required for Handle positioning
           ...fieldWidths,
         }}
+        onClick={() => onTableClick && onTableClick(nodeId)}
       >
         {/* Invisible Handles */}
         <Handle
@@ -65,7 +69,7 @@ export function TableNode(props) {
     );
   }
 
-  // Render table node (parent node) WITHOUT handles
+  // Table node rendering (header clickable)
   return (
     <div
       className="table-node"
@@ -79,14 +83,20 @@ export function TableNode(props) {
         cursor: 'move'
       }}
     >
-      <div style={{
-        fontWeight: 'bold',
-        padding: '8px 12px',
-        background: tableNameBg,
-        color: tableNameFont,
-        fontSize: 16,
-        letterSpacing: 1,
-      }}>
+      <div
+        style={{
+          fontWeight: 'bold',
+          padding: '8px 12px',
+          background: tableNameBg,
+          color: tableNameFont,
+          fontSize: 16,
+          letterSpacing: 1,
+          userSelect: 'none',
+          cursor: 'pointer'
+        }}
+        onClick={() => onTableClick && onTableClick(nodeId)}
+        onDoubleClick={() => onTableDoubleClick && onTableDoubleClick(nodeId)}
+      >
         {label}
       </div>
       <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
