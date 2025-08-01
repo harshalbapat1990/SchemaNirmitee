@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Handle } from 'reactflow';
 
 export function TableNode(props) {
-  const { label, fields = [], theme = 'light', selected, isField, fieldName, fieldType, onTableClick, onTableDoubleClick, nodeId } = props.data;
+  const { label, fields = [], theme = 'light', selected, isField, fieldName, fieldType } = props.data;
   const isDark = theme === 'dark';
   const tableNameBg = isDark ? '#222222' : '#3C6795';
   const tableNameFont = '#FFFFFF';
@@ -23,7 +23,11 @@ export function TableNode(props) {
     return { minWidth: px, maxWidth: px, width: px };
   }, [fields, isField]);
 
-  // Field node rendering
+  const onChange = useCallback((evt) => {
+    // You can handle updates here, e.g., update node data in state
+    console.log('Input changed:', evt.target.value);
+  }, []);
+
   if (isField) {
     return (
       <div
@@ -38,16 +42,15 @@ export function TableNode(props) {
           justifyContent: 'space-between',
           alignItems: 'center',
           boxSizing: 'border-box',
-          position: 'relative',
+          position: 'relative', // required for Handle positioning
           ...fieldWidths,
         }}
-        onClick={() => onTableClick && onTableClick(nodeId)}
       >
         {/* Invisible Handles */}
         <Handle
           type="target"
           position="left"
-          id="target"
+          id="target" // must match edge.targetHandle
           style={{ background: tableNameBg, opacity: 0, pointerEvents: 'none' }}
         />
         <span style={{ color: fieldNameFont, textAlign: 'left', flex: 1 }}>{fieldName}</span>
@@ -55,14 +58,14 @@ export function TableNode(props) {
         <Handle
           type="source"
           position="right"
-          id="source"
+          id="source" // must match edge.sourceHandle
           style={{ background: tableNameBg, opacity: 0, pointerEvents: 'none' }}
         />
       </div>
     );
   }
 
-  // Table node rendering (header clickable)
+  // Render table node (parent node) WITHOUT handles
   return (
     <div
       className="table-node"
@@ -76,20 +79,14 @@ export function TableNode(props) {
         cursor: 'move'
       }}
     >
-      <div
-        style={{
-          fontWeight: 'bold',
-          padding: '8px 12px',
-          background: tableNameBg,
-          color: tableNameFont,
-          fontSize: 16,
-          letterSpacing: 1,
-          userSelect: 'none',
-          cursor: 'pointer'
-        }}
-        onClick={() => onTableClick && onTableClick(nodeId)}
-        onDoubleClick={() => onTableDoubleClick && onTableDoubleClick(nodeId)}
-      >
+      <div style={{
+        fontWeight: 'bold',
+        padding: '8px 12px',
+        background: tableNameBg,
+        color: tableNameFont,
+        fontSize: 16,
+        letterSpacing: 1,
+      }}>
         {label}
       </div>
       <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
