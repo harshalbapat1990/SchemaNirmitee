@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import ReactFlow, { applyNodeChanges, applyEdgeChanges, addEdge, MiniMap,
-  Controls, useNodesState, useEdgesState} from 'reactflow';
+import ReactFlow, {
+  applyNodeChanges, applyEdgeChanges, addEdge, MiniMap,
+  Controls, useNodesState, useEdgesState
+} from 'reactflow';
 import 'reactflow/dist/style.css';
 import TableNode from './CustomNodes.jsx';
 import CustomEdgeStartEnd from './CustomEdgeStartEnd.jsx';
@@ -24,7 +26,7 @@ export default function DiagramViewer({ refnodes = [], refedges = [], onTableCli
         onTableDoubleClick,
         nodeId: node.id,
         selected: selectedTable === node.id,
-        theme, 
+        theme,
       }
     }))
   );
@@ -39,11 +41,11 @@ export default function DiagramViewer({ refnodes = [], refedges = [], onTableCli
           onTableDoubleClick,
           nodeId: node.id,
           selected: selectedTable === node.id,
-          theme, // <-- ADD THEME HERE TOO
+          theme,
         }
       }))
     );
-  }, [refnodes, onTableClick, onTableDoubleClick, selectedTable, theme]); // <-- ADD THEME TO DEPENDENCIES
+  }, [refnodes, onTableClick, onTableDoubleClick, selectedTable, theme]);
 
   const [edges, setEdges, onEdgesChange] = useEdgesState(refedges || []);
 
@@ -71,9 +73,9 @@ export default function DiagramViewer({ refnodes = [], refedges = [], onTableCli
         maxZoom={2}
         zoomOnDoubleClick={false}
       >
-      <MiniMap />
-      <Controls />
-    </ReactFlow>
+        {/* <MiniMap /> */}
+        <Controls />
+      </ReactFlow>
     </div>
   );
 }

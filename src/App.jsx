@@ -223,26 +223,25 @@ function dbmlToReactFlowNodes(parsed, theme) {
 
   const tables = parsed.schemas[0].tables;
 
-  const estimateTextWidth = (text, charWidth = 8) => text.length * charWidth;
+  const estimateTextWidth = (text, charWidth = 8) => text.length * charWidth + 20;
 
   const nodes = tables.flatMap((table, idx) => {
     const parentId = `${table.name}parent`;
-
     const fieldLabels = table.fields.map(
       (field) => `${field.name}: ${field.type?.type_name || field.type || 'unknown'}`
     );
 
     const maxFieldLabelWidth = Math.max(...fieldLabels.map(label => estimateTextWidth(label)));
-    console.log(maxFieldLabelWidth)
+    // console.log(maxFieldLabelWidth)
     const headerWidth = estimateTextWidth(table.name);
-    console.log(headerWidth)
+    // console.log(headerWidth)
     const contentWidth = Math.max(maxFieldLabelWidth, headerWidth);
-    console.log(contentWidth)
+    // console.log(contentWidth)
 
     const parentNode = {
       id: parentId,
       data: { 
-        label: table.name,
+        // label: table.name,
         isParent: true,
         theme
       },
@@ -263,7 +262,7 @@ function dbmlToReactFlowNodes(parsed, theme) {
         fieldType: 'Table',
         theme,
       },
-      position: { x: 1, y: 1 },
+      position: { x: 1, y: 6 },
       style: {
         width: contentWidth, // Add padding
       },

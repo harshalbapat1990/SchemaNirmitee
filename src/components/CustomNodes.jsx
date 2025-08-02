@@ -22,16 +22,16 @@ export function TableNode(props) {
     return (
       <div
         style={{
-
+          height: 24,
           padding: '8px 4px',
           background: fieldBg,
           color: fieldNameFont,
-          fontSize: 16,
+          fontSize: 14,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           position: 'relative',
-          cursor: 'pointer', // <-- Add this line
+          cursor: 'pointer',
         }}
         onClick={() => onTableClick && onTableClick(nodeId)}
         onDoubleClick={e => {
@@ -57,20 +57,21 @@ export function TableNode(props) {
     );
   }
 
+  // Table node header: acts as drag handle for parent, move cursor
   if (isTable) {
     return (
       <div
         style={{
+          height: 19,
           fontWeight: 'bold',
           padding: '8px 4px',
           background: tableNameBg,
           color: tableNameFont,
-          fontSize: 16,
+          fontSize: 14,
           display: 'flex',
-
           letterSpacing: 1,
           userSelect: 'none',
-          cursor: 'move',
+          cursor: 'pointer',
           borderRadius: 2,
         }}
         onClick={() => onTableClick && onTableClick(nodeId)}
@@ -84,76 +85,92 @@ export function TableNode(props) {
     );
   }
 
+  // Parent node: container only, no UI
   if (isParent) {
     return (
-      <div>
+      <div
+        style={{
+          cursor: 'move',
+        }}
+      >
+        <Handle type="target" position="right" style={{ opacity: 0 }} />
+        <Handle type="source" position="bottom" style={{ opacity: 0 }} />
         <Handle
-          visibility="hidden"
+          type="target"
+          position="left"
+          id="target"
+          style={{ background: fieldBg, opacity: 0 }}
         />
+
         <Handle
-          visibility="hidden"
+          type="source"
+          position="right"
+          id="source"
+          style={{ background: fieldBg, opacity: 0 }}
         />
       </div>
     );
   }
 
-  // Table node rendering
-  return (
-    <div>
-      <div
-        className="table-node"
-        style={{
-          overflow: 'hidden',
-          background: fieldBg,
-          cursor: 'move'
-        }}
-      >
-        <div
-          onClick={() => onTableClick && onTableClick(nodeId)}
-          onDoubleClick={e => {
-            e.stopPropagation();
-            onTableDoubleClick && onTableDoubleClick(nodeId);
-          }}>
-          {label}
-        </div>
-        <div
-          style={{
-            fontWeight: 'bold',
-            padding: '8px 12px',
-            background: fieldBg,
-            color: tableNameFont,
-            fontSize: 16,
-            letterSpacing: 1,
-            userSelect: 'none',
-            cursor: 'pointer'
-          }}
-          onClick={() => onTableClick && onTableClick(nodeId)}
-          onDoubleClick={e => {
-            e.stopPropagation();
-            onTableDoubleClick && onTableDoubleClick(nodeId);
-          }}
-        >
-          {label}
-        </div>
-        <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-          {fields.map((field, idx) => (
-            <li key={idx} style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '6px 12px',
-              background: fieldBg,
-              color: fieldNameFont,
-              fontSize: 16,
-            }}>
-              <span style={{ color: fieldNameFont, textAlign: 'left', flex: 1 }}>{field.name}</span>
-              <span style={{ color: fieldTypeFont, marginLeft: 8, textAlign: 'right', minWidth: 60 }}>{field.type}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
+  // // Table node rendering
+  // return (
+  //   <div>
+  //     <div
+  //       className="table-node"
+  //       style={{
+  //         overflow: 'hidden',
+  //         background: fieldBg,
+  //         cursor: 'move'
+  //       }}
+  //     >
+  //       <div
+  //         onClick={() => onTableClick && onTableClick(nodeId)}
+  //         onDoubleClick={e => {
+  //           e.stopPropagation();
+  //           onTableDoubleClick && onTableDoubleClick(nodeId);
+  //         }}>
+  //         {label}
+  //       </div>
+  //       <div
+  //         style={{
+  //           fontWeight: 'bold',
+  //           padding: '8px 12px',
+  //           background: fieldBg,
+  //           color: tableNameFont,
+  //           fontSize: 14,
+  //           letterSpacing: 1,
+  //           userSelect: 'none',
+  //           cursor: 'pointer'
+  //         }}
+  //         onClick={() => onTableClick && onTableClick(nodeId)}
+  //         onDoubleClick={e => {
+  //           e.stopPropagation();
+  //           onTableDoubleClick && onTableDoubleClick(nodeId);
+  //         }}
+  //       >
+  //         {label}
+  //       </div>
+  //       <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+  //         {fields.map((field, idx) => (
+  //           <li key={idx} style={{
+  //             display: 'flex',
+  //             justifyContent: 'space-between',
+  //             alignItems: 'center',
+  //             padding: '6px 12px',
+  //             background: fieldBg,
+  //             color: fieldNameFont,
+  //             fontSize: 14,
+  //           }}>
+  //             <span style={{ color: fieldNameFont, textAlign: 'left', flex: 1 }}>{field.name}</span>
+  //             <span style={{ color: fieldTypeFont, marginLeft: 8, textAlign: 'right', minWidth: 60 }}>{field.type}</span>
+  //           </li>
+  //         ))}
+  //       </ul>
+  //     </div>
+  //   </div>
+  // );
+  // Fallback (should not render)
+  return null;
 }
 
 export default TableNode;
