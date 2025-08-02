@@ -125,6 +125,7 @@ function MainApp() {
       if (dbml.trim()) {
         const parser = new Parser();
         const parsed = parser.parse(dbml, 'dbmlv2', { locations: true });
+        console.log('Parsed DBML:', parsed);
         setDiagnostics({ diags: [] });
         const nodes = dbmlToReactFlowNodes(parsed, theme);
         const edges = dbmlToReactFlowEdges(parsed);
@@ -284,7 +285,8 @@ function dbmlToReactFlowNodes(parsed, theme) {
       data: {
         label: `${field.name}: ${field.type?.type_name || field.type || 'unknown'}`,
         isField: true,
-        fieldName: field.name,
+        fieldName: `${field.name} ${field.pk ? '🔑' : ''} ${Array.isArray(field.endpoints) &&
+      field.endpoints.length > 0 ? '⛓️' : ''}`,
         fieldType: field.type?.type_name || field.type || 'unknown',
         theme,
         tableName: table.name, // <-- add this
