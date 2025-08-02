@@ -10,6 +10,7 @@ import CompileErrorsViewer from './components/CompileErrorsViewer'
 import { Parser } from '@dbml/core'
 import './App.css'
 import TableNode from './components/CustomNodes.jsx'
+import CustomEdgeStartEnd from './components/CustomEdgeStartEnd.jsx'
 
 function MainApp() {
   const editorRef = useRef(null);
@@ -233,8 +234,12 @@ function dbmlToReactFlowNodes(parsed, theme) {
 
     const parentNode = {
       id: parentId,
-      data: { label: table.name, theme },
-      position: { x: 100 + idx * 300, y: 100 },
+      data: { 
+        label: table.name,
+        isParent: true,
+        theme
+      },
+      position: { x: 100 + idx * 400, y: 100 },
       style: {
         width: contentWidth + 2, // Add padding
         height: ((table.fields.length + 1) * 40 + 2),
@@ -307,8 +312,12 @@ function dbmlToReactFlowEdges(parsed) {
         target,
         sourceHandle: 'source',
         targetHandle: 'target',
-        label: `${sourceRelation} → ${targetRelation}`,
-        type: 'smoothstep'
+        type: 'start-end',
+        data: {
+          startLabel: sourceRelation,
+          endLabel: targetRelation,
+        },
+        // label: `${sourceRelation} → ${targetRelation}`,
       });
     }
   });

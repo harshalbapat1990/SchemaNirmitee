@@ -3,7 +3,7 @@ import { Handle } from 'reactflow';
 
 export function TableNode(props) {
   const {
-    label, fields = [], theme = 'light', selected, isField, isTable, fieldName, fieldType,
+    label, fields = [], theme = 'light', selected, isField, isTable, isParent, fieldName, fieldType,
     onTableClick, onTableDoubleClick, nodeId
   } = props.data;
   const isDark = theme === 'dark';
@@ -21,37 +21,37 @@ export function TableNode(props) {
   if (isField) {
     return (
       <div
-      style={{
-        height: '24px',
-        padding: '8px 4px',
-        background: fieldBg,
-        color: fieldNameFont,
-        fontSize: 16,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        position: 'relative',
-      }}
-      onClick={() => onTableClick && onTableClick(nodeId)}
-      onDoubleClick={e => {
-        e.stopPropagation();
-        onTableDoubleClick && onTableDoubleClick(nodeId);
-      }}
+        style={{
+
+          padding: '8px 4px',
+          background: fieldBg,
+          color: fieldNameFont,
+          fontSize: 16,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          position: 'relative',
+        }}
+        onClick={() => onTableClick && onTableClick(nodeId)}
+        onDoubleClick={e => {
+          e.stopPropagation();
+          onTableDoubleClick && onTableDoubleClick(nodeId);
+        }}
       >
-      <Handle
-        type="target"
-        position="left"
-        id="target"
-        style={{ background: fieldBg, opacity: 0 }}
-      />
-      <span style={{ color: fieldNameFont, textAlign: 'left', flex: 1 }}>{fieldName}</span>
-      <span style={{ color: fieldTypeFont, textAlign: 'right' }}>{fieldType}</span>
-      <Handle
-        type="source"
-        position="right"
-        id="source"
-        style={{ background: fieldBg, opacity: 0 }}
-      />
+        <Handle
+          type="target"
+          position="left"
+          id="target"
+          style={{ background: fieldBg, opacity: 0 }}
+        />
+        <span style={{ color: fieldNameFont, textAlign: 'left', flex: 1 }}>{fieldName}</span>
+        <span style={{ color: fieldTypeFont, textAlign: 'right' }}>{fieldType}</span>
+        <Handle
+          type="source"
+          position="right"
+          id="source"
+          style={{ background: fieldBg, opacity: 0 }}
+        />
       </div>
     );
   }
@@ -93,10 +93,22 @@ export function TableNode(props) {
     );
   }
 
-  // Table node rendering (header clickable)
+  if (isParent) {
+    return (
+      <div>
+        <Handle
+          visibility="hidden"
+        />
+        <Handle
+          visibility="hidden"
+        />
+      </div>
+    );
+  }
+
+  // Table node rendering
   return (
     <div>
-
       <div
         className="table-node"
         style={{
@@ -104,13 +116,13 @@ export function TableNode(props) {
           background: fieldBg,
           cursor: 'move'
         }}
-      >      
-      <div
-        onClick={() => onTableClick && onTableClick(nodeId)}
-        onDoubleClick={e => {
-          e.stopPropagation();
-          onTableDoubleClick && onTableDoubleClick(nodeId);
-        }}>
+      >
+        <div
+          onClick={() => onTableClick && onTableClick(nodeId)}
+          onDoubleClick={e => {
+            e.stopPropagation();
+            onTableDoubleClick && onTableDoubleClick(nodeId);
+          }}>
           {label}
         </div>
         <div

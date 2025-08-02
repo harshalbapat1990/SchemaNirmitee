@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import '../styles/main.css'
 
 export default function LayoutContainer({ leftPane, rightPane }) {
-  const [divider, setDivider] = useState(50) // percent
+  const [divider, setDivider] = useState(30) // percent
 
   function handleDrag(e) {
     document.body.style.cursor = 'col-resize'
