@@ -50,36 +50,43 @@ function MainApp() {
 
     // Field node: TableName.FieldName
     if (nodeId.includes('.')) {
-      const [tableName, fieldName] = nodeId.split('.');
-      const tableStart = lines.findIndex(line => line.trim().toLowerCase().startsWith(`table ${tableName.toLowerCase()}`));
-      if (tableStart === -1 || !editorRef.current) return;
-      let openBraceLine = tableStart;
-      while (openBraceLine < lines.length && !lines[openBraceLine].includes('{')) openBraceLine++;
-      if (openBraceLine >= lines.length) return;
-      let fieldLine = -1;
-      for (let i = openBraceLine + 1; i < lines.length; i++) {
-        if (lines[i].includes('}')) break;
-        if (lines[i].trim().toLowerCase().startsWith(fieldName.toLowerCase())) {
-          fieldLine = i;
-          break;
+      const [tableName, fieldNameOrHeader] = nodeId.split('.');
+      // If it's a header node, treat as table node
+      if (fieldNameOrHeader === 'header') {
+        // Table node logic below
+        nodeId = tableName;
+      } else {
+        // Field node logic
+        const tableStart = lines.findIndex(line => line.trim().toLowerCase().startsWith(`table ${tableName.toLowerCase()}`));
+        if (tableStart === -1 || !editorRef.current) return;
+        let openBraceLine = tableStart;
+        while (openBraceLine < lines.length && !lines[openBraceLine].includes('{')) openBraceLine++;
+        if (openBraceLine >= lines.length) return;
+        let fieldLine = -1;
+        for (let i = openBraceLine + 1; i < lines.length; i++) {
+          if (lines[i].includes('}')) break;
+          if (lines[i].trim().toLowerCase().startsWith(fieldNameOrHeader.toLowerCase())) {
+            fieldLine = i;
+            break;
+          }
         }
+        if (fieldLine === -1) return;
+        editorRef.current.setSelection({
+          startLineNumber: fieldLine + 1,
+          startColumn: 1,
+          endLineNumber: fieldLine + 1,
+          endColumn: lines[fieldLine].length + 1,
+        });
+        editorRef.current.revealPositionInCenter({
+          lineNumber: fieldLine + 1,
+          column: 1,
+        });
+        editorRef.current.focus();
+        return;
       }
-      if (fieldLine === -1) return;
-      editorRef.current.setSelection({
-        startLineNumber: fieldLine + 1,
-        startColumn: 1,
-        endLineNumber: fieldLine + 1,
-        endColumn: lines[fieldLine].length + 1,
-      });
-      editorRef.current.revealPositionInCenter({
-        lineNumber: fieldLine + 1,
-        column: 1,
-      });
-      editorRef.current.focus();
-      return;
     }
 
-    // Table node
+    // Table node logic
     const tableStart = lines.findIndex(line => line.trim().toLowerCase().startsWith(`table ${nodeId.toLowerCase()}`));
     if (tableStart === -1 || !editorRef.current) return;
     let openBraceLine = tableStart;

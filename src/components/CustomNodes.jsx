@@ -31,6 +31,7 @@ export function TableNode(props) {
           justifyContent: 'space-between',
           alignItems: 'center',
           position: 'relative',
+          cursor: 'pointer', // <-- Add this line
         }}
         onClick={() => onTableClick && onTableClick(nodeId)}
         onDoubleClick={e => {
@@ -60,14 +61,17 @@ export function TableNode(props) {
     return (
       <div
         style={{
+          fontWeight: 'bold',
           padding: '8px 4px',
           background: tableNameBg,
           color: tableNameFont,
           fontSize: 16,
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          position: 'relative',
+
+          letterSpacing: 1,
+          userSelect: 'none',
+          cursor: 'move',
+          borderRadius: 2,
         }}
         onClick={() => onTableClick && onTableClick(nodeId)}
         onDoubleClick={e => {
@@ -75,20 +79,7 @@ export function TableNode(props) {
           onTableDoubleClick && onTableDoubleClick(nodeId);
         }}
       >
-        <Handle
-          type="target"
-          position="left"
-          id="target"
-          style={{ background: tableNameBg, opacity: 0 }}
-        />
-        <span style={{ color: tableNameFont, textAlign: 'left', flex: 1 }}>{fieldName}</span>
-        {/* <span style={{ color: fieldTypeFont, textAlign: 'right' }}>{fieldType}</span> */}
-        <Handle
-          type="source"
-          position="right"
-          id="source"
-          style={{ background: tableNameBg, opacity: 0 }}
-        />
+        <span style={{ color: tableNameFont, textAlign: 'left', flex: 1 }}>{label}</span>
       </div>
     );
   }
