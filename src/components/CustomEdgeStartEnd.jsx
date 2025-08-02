@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   getSmoothStepPath,
   EdgeLabelRenderer,
@@ -11,7 +11,6 @@ function EdgeLabel({ transform, label }) {
     <div
       style={{
         position: 'absolute',
-        // background: 'rgba(255, 255, 255, 0.9)',
         padding: '4px 8px',
         color: '#ff5050',
         fontSize: 11,
@@ -42,6 +41,8 @@ function hasLabels(data) {
 
 const CustomEdge = ({
   id,
+  source,
+  target,
   sourceX,
   sourceY,
   targetX,
@@ -49,6 +50,7 @@ const CustomEdge = ({
   sourcePosition,
   targetPosition,
   data = {},
+  speed = 200, // pixels per second (default)
 }) => {
   const [edgePath] = getSmoothStepPath({
     sourceX,
@@ -59,11 +61,44 @@ const CustomEdge = ({
     targetPosition,
   });
 
-  console.log('CustomEdgeStartEnd data:', data);
+  // Calculate path length for speed-based animation
+  const pathRef = useRef(null);
+  const [duration, setDuration] = useState(2);
+
+  useEffect(() => {
+    if (pathRef.current) {
+      const length = pathRef.current.getTotalLength();
+      setDuration(length / speed); // duration in seconds
+    }
+  }, [edgePath, speed]);
+
+  // Animate only if this edge is connected to the selected table
+  const isAnimated =
+    data.selectedTable &&
+    (source?.startsWith(data.selectedTable) || target?.startsWith(data.selectedTable));
+
+  // Set edge color: blue if animated, default otherwise
+  const edgeColor = isAnimated ? '#2196f3' : '#333';
+  const zIndex = isAnimated ? 10000 : 10;
 
   return (
     <>
-      <BaseEdge id={id} path={edgePath} />
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        style={{
+          stroke: edgeColor,
+          strokeWidth: 2,
+          zIndex: zIndex, // <-- set zIndex if animated
+        }}
+      />
+      {/* Hidden path for measuring length */}
+      <path ref={pathRef} d={edgePath} style={{ display: 'none' }} />
+      {isAnimated && (
+        <circle r="5" fill="#ff0073">
+          <animateMotion dur={`${duration}s`} repeatCount="indefinite" path={edgePath} />
+        </circle>
+      )}
       <EdgeLabelRenderer>
         {hasLabels(data) && (
           <>

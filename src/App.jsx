@@ -40,7 +40,12 @@ function MainApp() {
 
   // Single click: select/highlight in diagram
   const onNodeClick = useCallback((nodeId) => {
-    setSelectedTable(nodeId);
+    // Always select the table name (even if clicking a field or header)
+    let tableName = nodeId;
+    if (nodeId.includes('.')) {
+      tableName = nodeId.split('.')[0];
+    }
+    setSelectedTable(tableName);
   }, []);
 
   // Double click: highlight code in editor (table or field)
@@ -243,11 +248,12 @@ function dbmlToReactFlowNodes(parsed, theme) {
       data: { 
         // label: table.name,
         isParent: true,
-        theme
+        theme,
+        tableName: table.name, // <-- add this
       },
       position: { x: 100 + idx * 400, y: 100 },
       style: {
-        width: contentWidth + 2, // Add padding
+        width: contentWidth + 2,
         height: ((table.fields.length + 1) * 40 + 2),
       },
       type: 'default',
@@ -261,10 +267,11 @@ function dbmlToReactFlowNodes(parsed, theme) {
         fieldName: table.name,
         fieldType: 'Table',
         theme,
+        tableName: table.name, // <-- add this
       },
       position: { x: 1, y: 6 },
       style: {
-        width: contentWidth, // Add padding
+        width: contentWidth,
       },
       parentId,
       extent: 'parent',
@@ -279,10 +286,12 @@ function dbmlToReactFlowNodes(parsed, theme) {
         isField: true,
         fieldName: field.name,
         fieldType: field.type?.type_name || field.type || 'unknown',
+        theme,
+        tableName: table.name, // <-- add this
       },
       position: { x: 1, y: (fIdx + 1) * 40 + 1},
       style: {
-        width: contentWidth, // Add padding
+        width: contentWidth,
       },
       parentId,
       extent: 'parent',

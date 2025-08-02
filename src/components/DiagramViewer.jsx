@@ -18,22 +18,16 @@ const edgeTypes = {
 export default function DiagramViewer({ refnodes = [], refedges = [], onTableClick, onTableDoubleClick, selectedTable, theme }) {
   // Add handlers and nodeId to each node's data
   const [nodes, setNodes, onNodesChange] = useNodesState(
-    (refnodes || []).map(node => ({
-      ...node,
-      data: {
-        ...node.data,
-        onTableClick,
-        onTableDoubleClick,
-        nodeId: node.id,
-        selected: selectedTable === node.id,
-        theme,
+    (refnodes || []).map(node => {
+      let style = node.style || {};
+      // Highlight parent node if selected
+      if (node.data?.isParent && selectedTable && node.data?.tableName === selectedTable) {
+        style = {
+          ...style,
+          border: '2px solid yellow',
+        };
       }
-    }))
-  );
-
-  useEffect(() => {
-    setNodes(
-      (refnodes || []).map(node => ({
+      return {
         ...node,
         data: {
           ...node.data,
@@ -42,16 +36,59 @@ export default function DiagramViewer({ refnodes = [], refedges = [], onTableCli
           nodeId: node.id,
           selected: selectedTable === node.id,
           theme,
+        },
+        style,
+      };
+    })
+  );
+
+  useEffect(() => {
+    setNodes(
+      (refnodes || []).map(node => {
+        let style = node.style || {};
+        if (node.data?.isParent && selectedTable && node.data?.tableName === selectedTable) {
+          style = {
+            ...style,
+            border: '2px solid yellow',
+          };
         }
-      }))
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            onTableClick,
+            onTableDoubleClick,
+            nodeId: node.id,
+            selected: selectedTable === node.id,
+            theme,
+          },
+          style,
+        };
+      })
     );
   }, [refnodes, onTableClick, onTableDoubleClick, selectedTable, theme]);
 
-  const [edges, setEdges, onEdgesChange] = useEdgesState(refedges || []);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(
+    (refedges || []).map(edge => ({
+      ...edge,
+      data: {
+        ...edge.data,
+        selectedTable, // Pass the selected table to edge data
+      }
+    }))
+  );
 
   useEffect(() => {
-    setEdges(refedges || []);
-  }, [refedges]);
+    setEdges(
+      (refedges || []).map(edge => ({
+        ...edge,
+        data: {
+          ...edge.data,
+          selectedTable,
+        }
+      }))
+    );
+  }, [refedges, selectedTable]);
 
   // const onConnect = useCallback(
   //   (params) => setEdges((edgesSnapshot) => addEdge({ ...params, type: 'smoothstep' }, edgesSnapshot)),
