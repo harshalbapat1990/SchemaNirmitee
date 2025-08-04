@@ -290,7 +290,9 @@ function dbmlToReactFlowNodes(parsed, theme) {
           field.endpoints.length > 0 ? '⛓️' : ''}`,
         fieldType: field.type?.type_name || field.type || 'unknown',
         theme,
-        tableName: table.name, // <-- add this
+        tableName: table.name,
+        note: field.note || '', // <-- Pass the field note if present
+        tooltipPosition: contentWidth,
       },
       position: { x: 1, y: (fIdx + 1) * 40 + 1 },
       style: {

@@ -1,10 +1,10 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useRef } from 'react';
 import { Handle } from 'reactflow';
 
 export function TableNode(props) {
   const {
     label, fields = [], theme = 'light', selected, isField, isTable, isParent, fieldName, fieldType,
-    onTableClick, onTableDoubleClick, nodeId, note
+    onTableClick, onTableDoubleClick, nodeId, note, tooltipPosition
   } = props.data;
   const [showNote, setShowNote] = useState(false);
 
@@ -21,8 +21,23 @@ export function TableNode(props) {
   }, []);
 
   if (isField) {
+    const [showFieldNote, setShowFieldNote] = useState(false);
+    const fieldRef = useRef(null);
+    const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
+
+    const handleMouseEnter = () => {
+      if (fieldRef.current) {
+        setTooltipPos({
+          top: 0,
+          left: tooltipPosition + 8,
+        });
+      }
+      setShowFieldNote(true);
+    };
+
     return (
       <div
+        ref={fieldRef}
         style={{
           height: 24,
           padding: '8px 4px',
@@ -47,7 +62,49 @@ export function TableNode(props) {
           id="target"
           style={{ background: fieldBg, opacity: 0 }}
         />
-        <span style={{ color: fieldNameFont, textAlign: 'left', flex: 1 }}>{fieldName}</span>
+        <span style={{ color: fieldNameFont, textAlign: 'left', flex: 1, display: 'flex', alignItems: 'center' }}>
+          {fieldName}
+          {note && (
+            <span
+              style={{
+                marginLeft: 6,
+                cursor: 'pointer',
+                fontSize: 15,
+                display: 'flex',
+                alignItems: 'center',
+                position: 'relative',
+              }}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={() => setShowFieldNote(false)}
+              tabIndex={0}
+            >
+              <span role="img" aria-label="note">🗒️</span>
+              {showFieldNote && (
+                <div
+                  style={{
+                    position: 'fixed',
+                    top: tooltipPos.top,
+                    left: tooltipPos.left,
+                    background: isDark ? '#222' : '#fff',
+                    color: isDark ? '#ffe082' : '#333',
+                    border: `1px solid ${isDark ? '#444' : '#ccc'}`,
+                    borderRadius: 4,
+                    padding: 8,
+                    zIndex: 1001,
+                    minWidth: 100,
+                    maxWidth: 250,
+                    whiteSpace: 'pre-line',
+                    fontSize: 8,
+                    textAlign: 'left',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {note}
+                </div>
+              )}
+            </span>
+          )}
+        </span>
         <span style={{ color: fieldTypeFont, textAlign: 'right' }}>{fieldType}</span>
         <Handle
           type="source"
