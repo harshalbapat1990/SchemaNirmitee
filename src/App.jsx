@@ -246,7 +246,7 @@ function dbmlToReactFlowNodes(parsed, theme) {
 
     const parentNode = {
       id: parentId,
-      data: { 
+      data: {
         // label: table.name,
         isParent: true,
         theme,
@@ -285,13 +285,13 @@ function dbmlToReactFlowNodes(parsed, theme) {
       data: {
         label: `${field.name}: ${field.type?.type_name || field.type || 'unknown'}`,
         isField: true,
-        fieldName: `${field.name} ${field.pk ? '🔑' : ''} ${Array.isArray(field.endpoints) &&
-      field.endpoints.length > 0 ? '⛓️' : ''}`,
+        fieldName: `${field.name} ${field.pk ? '🔑' : ''} ${Array.isArray(field.endpoints) && !field.pk &&
+          field.endpoints.length > 0 ? '⛓️' : ''}`,
         fieldType: field.type?.type_name || field.type || 'unknown',
         theme,
         tableName: table.name, // <-- add this
       },
-      position: { x: 1, y: (fIdx + 1) * 40 + 1},
+      position: { x: 1, y: (fIdx + 1) * 40 + 1 },
       style: {
         width: contentWidth,
       },

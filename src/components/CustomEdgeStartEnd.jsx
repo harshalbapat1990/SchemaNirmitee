@@ -100,7 +100,7 @@ const CustomEdge = ({
         </circle>
       )}
       <EdgeLabelRenderer>
-        {hasLabels(data) && (
+        {hasLabels(data) && isAnimated && (
           <>
             {data.startLabel && (
               <EdgeLabel
