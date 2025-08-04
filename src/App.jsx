@@ -22,6 +22,20 @@ function MainApp() {
   const [diagramNodes, setDiagramNodes] = useState([]);
   const [diagramEdges, setDiagramEdges] = useState([]);
   const [selectedTable, setSelectedTable] = useState(null);
+  const [positions, setPositions] = useState(() => {
+    // Load positions from localStorage on first render
+    try {
+      const saved = localStorage.getItem('diagramPositions');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // Save positions to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('diagramPositions', JSON.stringify(positions));
+  }, [positions]);
 
   const handleErrorClick = (diag) => {
     const editor = editorRef.current;
@@ -120,6 +134,27 @@ function MainApp() {
     editorRef.current.focus();
   }, [dbml]);
 
+  // Handler to persist node positions
+  const handleNodesChange = useCallback((changes) => {
+    setDiagramNodes((nds) => {
+      let updated = nds;
+      changes.forEach(change => {
+        if (change.type === 'position' && change.position) {
+          setPositions(pos => {
+            const newPos = { ...pos, [change.id]: change.position };
+            // Save immediately for responsiveness (optional, since useEffect also saves)
+            localStorage.setItem('diagramPositions', JSON.stringify(newPos));
+            return newPos;
+          });
+          updated = updated.map(node =>
+            node.id === change.id ? { ...node, position: change.position } : node
+          );
+        }
+      });
+      return updated;
+    });
+  }, []);
+
   useEffect(() => {
     try {
       if (dbml.trim()) {
@@ -127,7 +162,8 @@ function MainApp() {
         const parsed = parser.parse(dbml, 'dbmlv2', { locations: true });
         console.log('Parsed DBML:', parsed);
         setDiagnostics({ diags: [] });
-        const nodes = dbmlToReactFlowNodes(parsed, theme);
+        // Pass positions to node generator
+        const nodes = dbmlToReactFlowNodes(parsed, theme, positions);
         const edges = dbmlToReactFlowEdges(parsed);
         setDiagramNodes(nodes);
         setDiagramEdges(edges);
@@ -157,7 +193,7 @@ function MainApp() {
       setDiagramNodes([]);
       setDiagramEdges([]);
     }
-  }, [dbml, setDiagramCode, theme]);
+  }, [dbml, setDiagramCode, theme, positions]); // <--- Add positions to deps
 
   return (
     <div style={{ background: 'var(--bg-secondary)', minHeight: '100%' }}>
@@ -215,6 +251,7 @@ function MainApp() {
                 onFieldDoubleClick={onNodeDoubleClick}
                 selectedTable={selectedTable}
                 theme={theme}
+                onNodesChange={handleNodesChange} // <--- Pass handler
               />
             </div>
           </div>
@@ -224,11 +261,11 @@ function MainApp() {
   )
 }
 
-function dbmlToReactFlowNodes(parsed, theme) {
+// Update dbmlToReactFlowNodes to use positions
+function dbmlToReactFlowNodes(parsed, theme, positions = {}) {
   if (!parsed || !parsed.schemas || !parsed.schemas[0] || !parsed.schemas[0].tables) return [];
 
   const tables = parsed.schemas[0].tables;
-
   const estimateTextWidth = (text, charWidth = 8) => text.length * charWidth + 20;
 
   const nodes = tables.flatMap((table, idx) => {
@@ -252,7 +289,7 @@ function dbmlToReactFlowNodes(parsed, theme) {
         theme,
         tableName: table.name, // <-- add this
       },
-      position: { x: 100 + idx * 600, y: 100 },
+      position: positions[parentId] || { x: 100 + idx * 600, y: 100 }, // <--- Use stored position
       style: {
         width: contentWidth + 2,
         height: ((table.fields.length + 1) * 40 + 2),

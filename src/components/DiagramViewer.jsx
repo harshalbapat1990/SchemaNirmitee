@@ -15,9 +15,9 @@ const edgeTypes = {
   'start-end': CustomEdgeStartEnd,
 };
 
-export default function DiagramViewer({ refnodes = [], refedges = [], onTableClick, onTableDoubleClick, selectedTable, theme }) {
+export default function DiagramViewer({ refnodes = [], refedges = [], onTableClick, onTableDoubleClick, selectedTable, theme, onNodesChange }) {
   // Add handlers and nodeId to each node's data
-  const [nodes, setNodes, onNodesChange] = useNodesState(
+  const [nodes, setNodes, onNodesChangeInternal] = useNodesState(
     (refnodes || []).map(node => {
       let style = node.style || {};
       // Highlight parent node if selected
@@ -102,7 +102,7 @@ export default function DiagramViewer({ refnodes = [], refedges = [], onTableCli
         edges={edges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        onNodesChange={onNodesChange}
+        onNodesChange={onNodesChange} // <--- Use prop
         onEdgesChange={onEdgesChange}
         // onConnect={onConnect}
         fitView
