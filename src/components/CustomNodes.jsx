@@ -1,11 +1,13 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Handle } from 'reactflow';
 
 export function TableNode(props) {
   const {
     label, fields = [], theme = 'light', selected, isField, isTable, isParent, fieldName, fieldType,
-    onTableClick, onTableDoubleClick, nodeId
+    onTableClick, onTableDoubleClick, nodeId, note
   } = props.data;
+  const [showNote, setShowNote] = useState(false);
+
   const isDark = theme === 'dark';
   const tableNameBg = isDark ? '#222222' : '#3C6795';
   const tableNameFont = '#FFFFFF';
@@ -81,6 +83,47 @@ export function TableNode(props) {
         }}
       >
         <span style={{ color: tableNameFont, textAlign: 'left', flex: 1 }}>{label}</span>
+        {note && (
+          <span
+            style={{
+              marginLeft: 8,
+              cursor: 'pointer',
+              fontSize: 16,
+              display: 'flex',
+              alignItems: 'center',
+              position: 'relative',
+            }}
+            onMouseEnter={() => setShowNote(true)}
+            onMouseLeave={() => setShowNote(false)}
+            tabIndex={0}
+          >
+            <span role="img" aria-label="note">🗒️</span>
+            {showNote && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  left: '100%',
+                  marginLeft: 8,
+                  background: isDark ? '#222' : '#fff',
+                  color: isDark ? '#ffe082' : '#333',
+                  border: `1px solid ${isDark ? '#444' : '#ccc'}`,
+                  borderRadius: 4,
+                  padding: 8,
+                  zIndex: 1001,
+                  minWidth: 100,
+                  maxWidth: 250,
+                  whiteSpace: 'pre-line',
+                  fontSize: 8,
+                  textAlign: 'left', // Ensure left alignment
+                  wordBreak: 'break-word', // Ensures long words wrap
+                }}
+              >
+                {note}
+              </div>
+            )}
+          </span>
+        )}
       </div>
     );
   }

@@ -252,7 +252,7 @@ function dbmlToReactFlowNodes(parsed, theme) {
         theme,
         tableName: table.name, // <-- add this
       },
-      position: { x: 100 + idx * 400, y: 100 },
+      position: { x: 100 + idx * 600, y: 100 },
       style: {
         width: contentWidth + 2,
         height: ((table.fields.length + 1) * 40 + 2),
@@ -268,7 +268,8 @@ function dbmlToReactFlowNodes(parsed, theme) {
         fieldName: table.name,
         fieldType: 'Table',
         theme,
-        tableName: table.name, // <-- add this
+        tableName: table.name,
+        note: table.note || '', // <-- Pass the note if present
       },
       position: { x: 1, y: 6 },
       style: {
